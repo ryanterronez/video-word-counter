@@ -37,7 +37,7 @@ export default {
       }
     },
     async searchYouTube() {
-      const apiKey = 'AIzaSyDgEWJPs3-nF5G-fg7ChnyVkURePlEiG5I';
+      const apiKey = '';
       const query = this.searchTerm;
       const channelId = this.channelId;
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}`;
