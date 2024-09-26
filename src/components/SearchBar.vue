@@ -1,12 +1,12 @@
 <template>
   <div class="search-bar">
-    <input type="text" v-model="searchTerm" @input="limitInput" placeholder="Enter search term" />
+    <input type="text" v-model="searchTerm" @input="limitInput" @keyup.enter="searchYouTube" placeholder="Enter search term" />
     <button @click="searchYouTube">Search</button>
     <p>{{ remainingCharacters }} characters remaining</p>
     <div v-if="videos.length">
       <h3>Search Results:</h3>
       <ul>
-        <li v-for="video in videos" :key="video.id.videoId">
+          <li v-for="video in videos" :key="video.id.videoId">
           <a :href="'https://www.youtube.com/watch?v=' + video.id.videoId" target="_blank">{{ video.snippet.title }}</a>
         </li>
       </ul>
@@ -37,7 +37,7 @@ export default {
       }
     },
     async searchYouTube() {
-      const apiKey = process.env.YOUTUBE_API_KEY;
+      const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY;
       const query = this.searchTerm;
       const channelId = this.channelId;
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}`;
