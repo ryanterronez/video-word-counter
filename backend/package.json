@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "deepspeech": "^0.9.3",
     "express": "^4.21.0",
+    "sox-stream": "^2.0.6",
+    "wav": "^1.0.2",
     "yt-dlp-wrap": "^2.3.12"
   }
 }

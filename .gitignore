@@ -2,6 +2,8 @@
 node_modules
 downloads
 /dist
+*.pbmm
+*.scorer
 
 
 # local env files

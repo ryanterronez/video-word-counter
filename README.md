@@ -13,6 +13,9 @@ for Windows you can use Chocolatey
 choco install yt-dlp
 ```
 
+### Deepspeech
+Get the deepspeech models and scorer [here](https://github.com/mozilla/DeepSpeech/releases)
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve
