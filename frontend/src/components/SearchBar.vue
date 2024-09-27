@@ -41,7 +41,9 @@ export default {
         this.searchTerm = this.searchTerm.slice(0, 250);
       }
     },
+
     async searchYouTube() {
+      // eslint-disable-next-line no-undef
       const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY;
       const query = this.searchTerm;
       const channelId = this.channelId;
@@ -54,10 +56,13 @@ export default {
         console.error('Error fetching YouTube videos:', error);
       }
     },
+
     async extractAudio(videoId) {
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      console.log('Sending request to backend:', videoUrl);
       try {
         const response = await axios.post('http://localhost:3000/extract_audio', { video_url: videoUrl });
+        console.log('Response from backend:', response.data);
         this.transcript = response.data.transcript;
         console.log(response.data.message);
       } catch (error) {
