@@ -19,6 +19,9 @@ app.use(express.json());
 
 app.post('/extract_audio', async (req, res) => {
   const videoUrl = req.body.video_url;
+
+  console.log(videoUrl)
+
   const outputDir = path.join(__dirname, 'downloads');
   const outputFile = path.join(outputDir, '%(title)s.%(ext)s');
 
