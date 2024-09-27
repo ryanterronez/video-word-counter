@@ -6,10 +6,14 @@
     <div v-if="videos.length">
       <h3>Search Results:</h3>
       <ul>
-          <li v-for="video in videos" :key="video.id.videoId">
-          <a :href="'https://www.youtube.com/watch?v=' + video.id.videoId" target="_blank">{{ video.snippet.title }}</a>
+        <li v-for="video in videos" :key="video.id.videoId">
+          <a @click.prevent="extractAudio(video.id.videoId)" href="#">{{ video.snippet.title }}</a>
         </li>
       </ul>
+    </div>
+    <div v-if="transcript">
+      <h3>Transcript:</h3>
+      <p>{{ transcript }}</p>
     </div>
   </div>
 </template>
@@ -22,7 +26,8 @@ export default {
     return {
       searchTerm: '',
       videos: [],
-      channelId: 'UCP6GE0Xs1S15lxdN4fQakQQ'
+      channelId: 'UCP6GE0Xs1S15lxdN4fQakQQ',
+      transcript: ''
     }
   },
   computed: {
@@ -40,12 +45,23 @@ export default {
       const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY;
       const query = this.searchTerm;
       const channelId = this.channelId;
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}`;
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}&maxResults=10`;
+
       try {
         const response = await axios.get(url);
         this.videos = response.data.items;
       } catch (error) {
         console.error('Error fetching YouTube videos:', error);
+      }
+    },
+    async extractAudio(videoId) {
+      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      try {
+        const response = await axios.post('http://localhost:3000/extract_audio', { video_url: videoUrl });
+        this.transcript = response.data.transcript;
+        console.log(response.data.message);
+      } catch (error) {
+        console.error('Error extracting audio:', error);
       }
     }
   }
@@ -79,8 +95,42 @@ input:focus {
   outline: none;
 }
 
+button {
+  padding: 10px 20px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 25px;
+  background-color: #007BFF;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
 p {
   font-size: 14px;
   color: #666;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin: 10px 0;
+}
+
+a {
+  color: #007BFF;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 </style>
