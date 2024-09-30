@@ -5,15 +5,16 @@ const fs = require('fs');
 const path = require('path');
 const wav = require('wav');
 const ffmpeg = require('fluent-ffmpeg');
-const AWS = require('aws-sdk'); // Added line
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+const axios = require('axios');
 
 const app = express();
 const port = 3000;
 
-// Configure AWS SDK
-AWS.config.update({ region: 'us-east-1' }); // Update to your region
-
-const transcribeService = new AWS.TranscribeService();
+// Configure AWS SDK v3 clients
+const s3Client = new S3Client({ region: 'us-east-2' });
+const transcribeClient = new TranscribeClient({ region: 'us-east-2' });
 
 app.use(cors());
 app.use(express.json());
@@ -59,39 +60,46 @@ async function transcribeAudio(audioFilePath) {
     ffmpeg(audioFilePath)
       .toFormat('wav')
       .on('end', async () => {
-        const audioStream = fs.createReadStream(tempWavPath);
+
+        const s3Key = `audio/${path.basename(tempWavPath)}`;
+        await uploadToS3(tempWavPath, s3Key);
 
         const params = {
           LanguageCode: 'en-US',
           Media: {
-            MediaFileUri: `s3://your-bucket/${path.basename(tempWavPath)}`
+            MediaFileUri: `s3://audio-transcription-node-20/${s3Key}`
           },
           TranscriptionJobName: `TranscriptionJob-${Date.now()}`,
           MediaFormat: 'wav',
-          OutputBucketName: 'your-bucket'
         };
 
         try {
-          await uploadToS3(tempWavPath, `your-bucket/${path.basename(tempWavPath)}`);
-          const data = await transcribeService.startTranscriptionJob(params).promise();
+          const data = await transcribeClient.send(new StartTranscriptionJobCommand(params));
           const jobName = data.TranscriptionJob.TranscriptionJobName;
-
+        
           // Poll for job completion
           const checkJobStatus = async () => {
-            const jobData = await transcribeService.getTranscriptionJob({ TranscriptionJobName: jobName }).promise();
+            const jobData = await transcribeClient.send(new GetTranscriptionJobCommand({ TranscriptionJobName: jobName }));
             if (jobData.TranscriptionJob.TranscriptionJobStatus === 'COMPLETED') {
               const transcriptUri = jobData.TranscriptionJob.Transcript.TranscriptFileUri;
-              const transcriptData = await axios.get(transcriptUri);
-              resolve(transcriptData.data.results.transcripts[0].transcript);
+              console.log(`Transcript URI: ${transcriptUri}`); // Debugging: Log the transcript URI
+              try {
+                const transcriptData = await axios.get(transcriptUri);
+                resolve(transcriptData.data.results.transcripts[0].transcript);
+              } catch (fetchError) {
+                console.error(`Error fetching transcript: ${fetchError.message}`); // Debugging: Log fetch error
+                reject(fetchError);
+              }
             } else if (jobData.TranscriptionJob.TranscriptionJobStatus === 'FAILED') {
               reject(new Error('Transcription job failed'));
             } else {
               setTimeout(checkJobStatus, 5000);
             }
           };
-
+        
           checkJobStatus();
         } catch (error) {
+          console.error(`Error starting transcription job: ${error.message}`); // Debugging: Log start job error
           reject(error);
         }
       })
@@ -103,16 +111,15 @@ async function transcribeAudio(audioFilePath) {
 }
 
 async function uploadToS3(filePath, s3Key) {
-  const s3 = new AWS.S3();
   const fileStream = fs.createReadStream(filePath);
 
   const params = {
-    Bucket: 'your-bucket',
+    Bucket: 'audio-transcription-node-20',
     Key: s3Key,
     Body: fileStream
   };
 
-  return s3.upload(params).promise();
+  return s3Client.send(new PutObjectCommand(params));
 }
 
 app.listen(port, () => {
