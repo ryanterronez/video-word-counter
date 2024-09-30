@@ -1,29 +1,29 @@
 const express = require('express');
+const cors = require('cors');
 const YtDlpWrap = require('yt-dlp-wrap').default;
 const fs = require('fs');
 const path = require('path');
-const DeepSpeech = require('deepspeech');
 const wav = require('wav');
-const Sox = require('sox-stream');
+const ffmpeg = require('fluent-ffmpeg');
+const AWS = require('aws-sdk'); // Added line
 
 const app = express();
 const port = 3000;
 
-const MODEL_PATH = 'deepspeech-0.9.3-models.pbmm';
-const SCORER_PATH = 'deepspeech-0.9.3-models.scorer';
+// Configure AWS SDK
+AWS.config.update({ region: 'us-east-1' }); // Update to your region
 
-const model = new DeepSpeech.Model(MODEL_PATH);
-model.enableExternalScorer(SCORER_PATH);
+const transcribeService = new AWS.TranscribeService();
 
+app.use(cors());
 app.use(express.json());
 
 app.post('/extract_audio', async (req, res) => {
   const videoUrl = req.body.video_url;
-
-  console.log(videoUrl)
+  const videoTitle = req.body.video_title;
 
   const outputDir = path.join(__dirname, 'downloads');
-  const outputFile = path.join(outputDir, '%(title)s.%(ext)s');
+  const outputFile = path.join(outputDir, `${videoTitle}.mp3`);
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
@@ -40,6 +40,10 @@ app.post('/extract_audio', async (req, res) => {
     ]);
 
     const audioFilePath = outputFile.replace('%(title)s', 'your_audio_file_name').replace('%(ext)s', 'mp3');
+    if (!fs.existsSync(audioFilePath)) {
+      throw new Error(`File not found: ${audioFilePath}`);
+    }
+
     const transcript = await transcribeAudio(audioFilePath);
     res.status(200).json({ message: 'Audio extracted and transcribed successfully', transcript });
   } catch (error) {
@@ -50,33 +54,65 @@ app.post('/extract_audio', async (req, res) => {
 
 async function transcribeAudio(audioFilePath) {
   return new Promise((resolve, reject) => {
-    const audioStream = fs.createReadStream(audioFilePath)
-      .pipe(Sox({
-        output: {
-          bits: 16,
-          rate: 16000,
-          channels: 1,
-          type: 'wav'
+    const tempWavPath = audioFilePath.replace('.mp3', '.wav');
+
+    ffmpeg(audioFilePath)
+      .toFormat('wav')
+      .on('end', async () => {
+        const audioStream = fs.createReadStream(tempWavPath);
+
+        const params = {
+          LanguageCode: 'en-US',
+          Media: {
+            MediaFileUri: `s3://your-bucket/${path.basename(tempWavPath)}`
+          },
+          TranscriptionJobName: `TranscriptionJob-${Date.now()}`,
+          MediaFormat: 'wav',
+          OutputBucketName: 'your-bucket'
+        };
+
+        try {
+          await uploadToS3(tempWavPath, `your-bucket/${path.basename(tempWavPath)}`);
+          const data = await transcribeService.startTranscriptionJob(params).promise();
+          const jobName = data.TranscriptionJob.TranscriptionJobName;
+
+          // Poll for job completion
+          const checkJobStatus = async () => {
+            const jobData = await transcribeService.getTranscriptionJob({ TranscriptionJobName: jobName }).promise();
+            if (jobData.TranscriptionJob.TranscriptionJobStatus === 'COMPLETED') {
+              const transcriptUri = jobData.TranscriptionJob.Transcript.TranscriptFileUri;
+              const transcriptData = await axios.get(transcriptUri);
+              resolve(transcriptData.data.results.transcripts[0].transcript);
+            } else if (jobData.TranscriptionJob.TranscriptionJobStatus === 'FAILED') {
+              reject(new Error('Transcription job failed'));
+            } else {
+              setTimeout(checkJobStatus, 5000);
+            }
+          };
+
+          checkJobStatus();
+        } catch (error) {
+          reject(error);
         }
-      }))
-      .pipe(new wav.Reader());
-
-    let audioBuffer = [];
-
-    audioStream.on('data', (data) => {
-      audioBuffer.push(data);
-    });
-
-    audioStream.on('end', () => {
-      audioBuffer = Buffer.concat(audioBuffer);
-      const result = model.stt(audioBuffer);
-      resolve(result);
-    });
-
-    audioStream.on('error', (error) => {
-      reject(error);
-    });
+      })
+      .on('error', (error) => {
+        reject(error);
+      })
+      .save(tempWavPath);
   });
+}
+
+async function uploadToS3(filePath, s3Key) {
+  const s3 = new AWS.S3();
+  const fileStream = fs.createReadStream(filePath);
+
+  const params = {
+    Bucket: 'your-bucket',
+    Key: s3Key,
+    Body: fileStream
+  };
+
+  return s3.upload(params).promise();
 }
 
 app.listen(port, () => {

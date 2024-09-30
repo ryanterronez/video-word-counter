@@ -7,7 +7,7 @@
       <h3>Search Results:</h3>
       <ul>
         <li v-for="video in videos" :key="video.id.videoId">
-          <a @click.prevent="extractAudio(video.id.videoId)" href="#">{{ video.snippet.title }}</a>
+          <a @click.prevent="extractAudio(video.id.videoId, video.snippet.title)" href="#">{{ video.snippet.title }}</a>
         </li>
       </ul>
     </div>
@@ -57,11 +57,11 @@ export default {
       }
     },
 
-    async extractAudio(videoId) {
+    async extractAudio(videoId, title) {
       const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
       console.log('Sending request to backend:', videoUrl);
       try {
-        const response = await axios.post('http://localhost:3000/extract_audio', { video_url: videoUrl });
+        const response = await axios.post('http://localhost:3000/extract_audio', { video_url: videoUrl, video_title: title });
         console.log('Response from backend:', response.data);
         this.transcript = response.data.transcript;
         console.log(response.data.message);
