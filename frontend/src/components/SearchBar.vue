@@ -1,6 +1,7 @@
 <template>
   <div class="search-bar">
-    <input type="text" v-model="searchTerm" @input="limitInput" @keyup.enter="searchYouTube" placeholder="Enter search term" />
+    <input type="text" v-model="searchTerm" @input="limitInput" @keyup.enter="searchYouTube"
+      placeholder="Enter search term" />
     <button @click="searchYouTube">Search</button>
     <p>{{ remainingCharacters }} characters remaining</p>
     <div v-if="videos.length">
@@ -14,7 +15,7 @@
     <div class="transcript-container">
       <button @click="getTranscript">Get Transcript</button>
       <h3>Transcript:</h3>
-      <p>{{ transcript }}</p>
+      <p>{{ truncatedTranscript }}</p>
     </div>
     <div>
       <button @click="createCloud">Create Word Cloud</button>
@@ -24,9 +25,9 @@
 </template>
 
 <script>
-import axios from 'axios';
-import * as d3 from 'd3';
-import cloud from 'd3-cloud';
+import axios from 'axios'
+import * as d3 from 'd3'
+import cloud from 'd3-cloud'
 
 export default {
   data() {
@@ -34,106 +35,139 @@ export default {
       searchTerm: '',
       videos: [],
       channelId: 'UCP6GE0Xs1S15lxdN4fQakQQ',
-      transcript: ''
+      transcript: '',
     }
   },
   computed: {
     remainingCharacters() {
-      return 250 - this.searchTerm.length;
-    }
+      return 250 - this.searchTerm.length
+    },
+
+    truncatedTranscript() {
+      const maxLength = 1000
+      return this.transcript.length > maxLength
+        ? this.transcript.substring(0, maxLength) + '...'
+        : this.transcript
+    },
   },
   methods: {
     limitInput() {
       if (this.searchTerm.length > 250) {
-        this.searchTerm = this.searchTerm.slice(0, 250);
+        this.searchTerm = this.searchTerm.slice(0, 250)
       }
     },
 
     async searchYouTube() {
       // eslint-disable-next-line no-undef
-      const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY;
-      const query = this.searchTerm;
-      const channelId = this.channelId;
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}&maxResults=10`;
+      const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY
+      const query = this.searchTerm
+      const channelId = this.channelId
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}&maxResults=10`
 
       try {
-        const response = await axios.get(url);
-        this.videos = response.data.items;
+        const response = await axios.get(url)
+        this.videos = response.data.items
       } catch (error) {
-        console.error('Error fetching YouTube videos:', error);
+        console.error('Error fetching YouTube videos:', error)
       }
+    },
+
+    getTopNWords(text, n) {
+      const words = text.split(/\s+/)
+      const wordCounts = words.reduce((counts, word) => {
+        counts[word] = (counts[word] || 0) + 1
+        return counts
+      }, {})
+      const sortedWords = Object.entries(wordCounts).sort((a, b) => b[1] - a[1])
+      return sortedWords
+        .slice(0, n)
+        .map(([word, count]) => ({ text: word, size: 10 + count * 10 }))
     },
 
     async getTranscript() {
       // eslint-disable-next-line no-undef
       try {
-        const response = await axios.get('http://localhost:3000/get-transcript');
-        console.log('Response from backend:', response.data);
-        this.transcript = response.data.results.transcripts[0].transcript;
-        console.log(this.transcript);
+        const response = await axios.get('http://localhost:3000/get-transcript')
+        console.log('Response from backend:', response.data)
+        this.transcript = response.data.results.transcripts[0].transcript
+        console.log(this.transcript)
       } catch (error) {
-        console.error('Error extracting audio:', error);
+        console.error('Error extracting audio:', error)
       }
     },
 
     async extractAudio(videoId, title) {
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-      console.log('Sending request to backend:', videoUrl);
+      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
+      console.log('Sending request to backend:', videoUrl)
       try {
-        const response = await axios.post('http://localhost:3000/extract_audio', { video_url: videoUrl, video_title: title });
-        console.log('Response from backend:', response.data);
-        this.transcript = response.data.transcript;
-        console.log(response.data.message);
+        const response = await axios.post(
+          'http://localhost:3000/extract_audio',
+          { video_url: videoUrl, video_title: title },
+        )
+        console.log('Response from backend:', response.data)
+        this.transcript = response.data.transcript
+        console.log(response.data.message)
       } catch (error) {
-        console.error('Error extracting audio:', error);
+        console.error('Error extracting audio:', error)
       }
     },
 
     async createCloud() {
-      let words;
+      let words
       if (!this.transcript) {
-        words = ["Hello", "world", "normally", "you", "want", "more", "words", "than", "this"]
-        .map(function(d) {
-        return {text: d, size: 10 + Math.random() * 90};
-        });
+        words = [
+          'Hello',
+          'world',
+          'normally',
+          'you',
+          'want',
+          'more',
+          'words',
+          'than',
+          'this',
+        ].map(function (d) {
+          return { text: d, size: 10 + Math.random() * 90 }
+        })
       } else {
-        words = this.transcript.split(/\s+/).map(word => ({ text: word, size: 10 + Math.random() * 90 }));
+        words = this.getTopNWords(this.transcript, 25)
       }
+      console.log(words)
 
-
-    const layout = cloud()
+      const layout = cloud()
         .size([600, 400])
         .words(words)
         .padding(5)
         .rotate(() => ~~(Math.random() * 2) * 90)
         .font('Impact')
-        .fontSize(d => d.size)
-        .on('end', this.drawCloud);
+        .fontSize((d) => d.size)
+        .on('end', this.drawCloud)
 
-      layout.start();
+      layout.start()
     },
     drawCloud(words) {
-      const container = this.$refs.wordCloudContainer;
-      container.innerHTML = ''; // Clear previous content
+      const container = this.$refs.wordCloudContainer
+      container.innerHTML = ''
 
-      const svg = d3.select(container).append('svg')
+      const svg = d3
+        .select(container)
+        .append('svg')
         .attr('width', 600)
-        .attr('height', 400);
+        .attr('height', 400)
 
-      const g = svg.append('g')
-        .attr('transform', 'translate(300,200)');
+      const g = svg.append('g').attr('transform', 'translate(300,200)')
 
       g.selectAll('text')
         .data(words)
-        .enter().append('text')
-        .style('font-size', d => `${d.size}px`)
+        .enter()
+        .append('text')
+        .style('font-size', (d) => `${d.size}px`)
         .style('font-family', 'Impact')
         .style('fill', (d, i) => d3.schemeCategory10[i % 10])
         .attr('text-anchor', 'middle')
-        .attr('transform', d => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
-        .text(d => d.text);
-    }
-  }
+        .attr('transform', (d) => `translate(${[d.x, d.y]})rotate(${d.rotate})`)
+        .text((d) => d.text)
+    },
+  },
 }
 </script>
 
@@ -166,7 +200,7 @@ input {
 }
 
 input:focus {
-  border-color: #007BFF;
+  border-color: #007bff;
   box-shadow: 0 2px 5px rgba(0, 123, 255, 0.5);
   outline: none;
 }
@@ -176,7 +210,7 @@ button {
   margin: 10px 0;
   border: none;
   border-radius: 25px;
-  background-color: #007BFF;
+  background-color: #007bff;
   color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -201,7 +235,7 @@ li {
 }
 
 a {
-  color: #007BFF;
+  color: #007bff;
   text-decoration: none;
   cursor: pointer;
 }
