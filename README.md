@@ -13,23 +13,5 @@ for Windows you can use Chocolatey
 choco install yt-dlp
 ```
 
-### Deepspeech
-Get the deepspeech models and scorer [here](https://github.com/mozilla/DeepSpeech/releases)
-
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
