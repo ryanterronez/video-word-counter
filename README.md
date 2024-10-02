@@ -1,10 +1,5 @@
 # video-word-counter
 
-## Project setup
-```
-npm install
-```
-
 ### Must install yt-dlp locally
 Can see docs [here](https://github.com/yt-dlp/yt-dlp/wiki/Installation#third-party-package-managers)
 
