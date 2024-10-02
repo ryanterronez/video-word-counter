@@ -1,14 +1,24 @@
 <template>
   <div class="search-bar">
-    <input type="text" v-model="searchTerm" @input="limitInput" @keyup.enter="searchYouTube"
-      placeholder="Enter search term" />
+    <input
+      type="text"
+      v-model="searchTerm"
+      @input="limitInput"
+      @keyup.enter="searchYouTube"
+      placeholder="Enter search term"
+    />
+
     <button @click="searchYouTube">Search</button>
     <p>{{ remainingCharacters }} characters remaining</p>
     <div v-if="videos.length">
       <h3>Search Results:</h3>
       <ul>
         <li v-for="video in videos" :key="video.id.videoId">
-          <a @click.prevent="extractAudio(video.id.videoId, video.snippet.title)" href="#">{{ video.snippet.title }}</a>
+          <a
+            @click.prevent="extractAudio(video.id.videoId, video.snippet.title)"
+            href="#"
+            >{{ video.snippet.title }}</a
+          >
         </li>
       </ul>
     </div>
@@ -72,16 +82,20 @@ export default {
       }
     },
 
-    getTopNWords(text, n) {
+    getNTopWords(text, n) {
       const words = text.split(/\s+/)
       const wordCounts = words.reduce((counts, word) => {
-        counts[word] = (counts[word] || 0) + 1
-        return counts
+        if (word.length < 4) {
+          return counts
+        } else {
+          counts[word] = (counts[word] || 0) + 1
+          return counts
+        }
       }, {})
       const sortedWords = Object.entries(wordCounts).sort((a, b) => b[1] - a[1])
       return sortedWords
         .slice(0, n)
-        .map(([word, count]) => ({ text: word, size: 10 + count * 10 }))
+        .map(([word, count]) => ({ text: word, size: 10 + count * 2 }))
     },
 
     async getTranscript() {
@@ -129,7 +143,7 @@ export default {
           return { text: d, size: 10 + Math.random() * 90 }
         })
       } else {
-        words = this.getTopNWords(this.transcript, 25)
+        words = this.getNTopWords(this.transcript, 10)
       }
       console.log(words)
 
