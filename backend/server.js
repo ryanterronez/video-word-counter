@@ -120,13 +120,17 @@ async function transcribeAudio(audioFilePath) {
 }
 
 app.get('/get-transcript', (req, res) => {
+  getTranscript(req, res);
+});
+
+async function getTranscript(req, res) {
   if (process.env.VUE_APP_LOCAL) {
     console.log('Local mode, grabbing local JSON file');
     const jsonFilePath = path.join(__dirname, 'downloads/asrOutput.json')
     fs.readFile(jsonFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error(`Error reading JSON file: ${err.message}`);
-        return res.status(500).json({ error: 'Failed to read JSON file' });
+        res.status(500).json({ error: 'Failed to read JSON file' });
       }
 
       try {
@@ -140,7 +144,7 @@ app.get('/get-transcript', (req, res) => {
   } else {
     res.status(200).json({ error: 'Local mode not enabled, functionality not yet implemented' });
     }
-});
+}
 
 async function uploadToS3(filePath, s3Key) {
   const fileStream = fs.createReadStream(filePath);

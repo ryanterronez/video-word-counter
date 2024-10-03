@@ -4,6 +4,18 @@
     <h3>Transcript:</h3>
     <p>{{ truncatedTranscript }}</p>
     <div class="word-cloud-container">
+      <input
+        type="text"
+        v-model="cloudWordSize"
+        placeholder="Word cloud word size"
+      />
+      <input
+        type="text"
+        v-model="cloudWordCount"
+        @input="limitInput"
+        @keyup.enter="createCloud"
+        placeholder="Word cloud word count"
+      />
       <button @click="createCloud">Create Word Cloud</button>
       <div ref="wordCloudContainer" class="word-cloud"></div>
     </div>
@@ -19,6 +31,8 @@ export default {
   data() {
     return {
       transcript: '',
+      cloudWordCount: '',
+      cloudWordSize: '',
     }
   },
   computed: {
@@ -30,10 +44,15 @@ export default {
     },
   },
   methods: {
+    limitInput() {
+      if (this.cloudWordCount.length > 2) {
+        this.cloudWordCount = this.cloudWordCount.slice(0, 2)
+      }
+    },
     getNTopWords(text, n) {
-      const words = text.split(/\s+/)
+      const words = text.split(/[^a-zA-Z0-9']+/)
       const wordCounts = words.reduce((counts, word) => {
-        if (word.length < 4) {
+        if (word.length < this.cloudWordSize) {
           return counts
         } else {
           counts[word] = (counts[word] || 0) + 1
@@ -75,7 +94,7 @@ export default {
           return { text: d, size: 10 + Math.random() * 90 }
         })
       } else {
-        words = this.getNTopWords(this.transcript, 10)
+        words = this.getNTopWords(this.transcript, this.cloudWordCount)
       }
       console.log(words)
 
@@ -157,5 +176,24 @@ button:hover {
 p {
   font-size: 14px;
   color: #666;
+}
+
+input {
+  width: 100%;
+  max-width: 200px;
+  padding: 10px 15px;
+  margin: 10px 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  border-color: #007bff;
+  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.5);
+  outline: none;
 }
 </style>
