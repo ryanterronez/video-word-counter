@@ -1,21 +1,17 @@
 module.exports = {
   root: true,
-  env: {
-    node: true,
-  },
   extends: [
-    'plugin:vue/essential',
-    'eslint:recommended',
-    'plugin:prettier/recommended',
+    "plugin:vue/vue3-essential",
+    "eslint:recommended",
+    "@vue/eslint-config-prettier"
   ],
-  parserOptions: {
-    parser: '@babel/eslint-parser',
-    requireConfigFile: false,
+  env: {
+    "vue/setup-compiler-macros": true
   },
   rules: {
-    'vue/no-unused-vars': 'warn',
-    'prettier/prettier': [
-      'error',
+    "no-unused-vars": "error", // Ensure this rule is set to 'error'
+    "prettier/prettier": [
+      "error",
       {
         singleQuote: true,
         semi: false,
