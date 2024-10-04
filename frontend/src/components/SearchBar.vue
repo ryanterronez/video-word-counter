@@ -1,19 +1,32 @@
 <template>
   <div class="search-bar">
-    <input
-      type="text"
-      v-model="searchTerm"
-      @input="limitInput"
-      @keyup.enter="searchYouTube"
-      placeholder="Enter search term"
-    />
-
+    <div class="form-group">
+      <label for="channel-id">Channel ID</label>
+      <input
+        type="text"
+        id="channel-id"
+        v-model="channelId"
+        @input="limitInput"
+        placeholder="Enter channel id"
+      />
+    </div>
+    <div class="form-group">
+      <label for="video-search-term">Video Search Term</label>
+      <input
+        type="text"
+        id="video-search-term"
+        v-model="videoSearchTerm"
+        @input="limitInput"
+        @keyup.enter="searchYouTube"
+        placeholder="Enter search term"
+      />
+    </div>
     <button @click="searchYouTube">Search</button>
     <p>{{ remainingCharacters }} characters remaining</p>
     <div v-if="videos.length">
       <h3>Search Results:</h3>
       <ul>
-        <li v-for="video in videos" :key="video.id.videoId">
+        <li v-for="video in displayedVideos" :key="video.id.videoId">
           <a
             @click.prevent="extractAudio(video.id.videoId, video.snippet.title)"
             href="#"
@@ -21,6 +34,9 @@
           >
         </li>
       </ul>
+      <button v-if="!showAllVideos" @click="showAllVideos = true">
+        Show All Videos
+      </button>
     </div>
   </div>
 </template>
@@ -31,27 +47,35 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      searchTerm: '',
+      videoSearchTerm: '',
       videos: [],
       channelId: 'UCP6GE0Xs1S15lxdN4fQakQQ',
+      searchCharLimit: 50,
+      showAllVideos: false,
     }
   },
   computed: {
     remainingCharacters() {
-      return 250 - this.searchTerm.length
+      return this.searchCharLimit - this.videoSearchTerm.length
+    },
+    displayedVideos() {
+      return this.showAllVideos ? this.videos : this.videos.slice(0, 5)
     },
   },
   methods: {
     limitInput() {
-      if (this.searchTerm.length > 250) {
-        this.searchTerm = this.searchTerm.slice(0, 250)
+      if (this.videoSearchTerm.length > this.searchCharLimit) {
+        this.videoSearchTerm = this.videoSearchTerm.slice(
+          0,
+          this.searchCharLimit
+        )
       }
     },
 
     async searchYouTube() {
       // eslint-disable-next-line no-undef
       const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY
-      const query = this.searchTerm
+      const query = this.videoSearchTerm
       const channelId = this.channelId
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}&maxResults=10`
 
@@ -84,40 +108,42 @@ export default {
 
 <style scoped>
 .search-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-input {
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+input[type='text'] {
   width: 100%;
-  max-width: 400px;
-  padding: 10px 15px;
-  margin: 10px 0;
-  box-sizing: border-box;
+  padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 25px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  font-size: 16px;
-  transition: all 0.3s ease;
-}
-
-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 2px 5px rgba(0, 123, 255, 0.5);
-  outline: none;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 button {
+  display: inline-block;
   padding: 10px 20px;
-  margin: 10px 0;
-  border: none;
-  border-radius: 25px;
+  font-size: 16px;
+  color: #fff;
   background-color: #007bff;
-  color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
 button:hover {
@@ -125,8 +151,13 @@ button:hover {
 }
 
 p {
-  font-size: 14px;
+  margin-top: 10px;
   color: #666;
+}
+
+h3 {
+  margin-top: 20px;
+  color: #333;
 }
 
 ul {
@@ -135,13 +166,12 @@ ul {
 }
 
 li {
-  margin: 10px 0;
+  margin-bottom: 10px;
 }
 
 a {
   color: #007bff;
   text-decoration: none;
-  cursor: pointer;
 }
 
 a:hover {
