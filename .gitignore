@@ -4,6 +4,7 @@ downloads
 /dist
 *.pbmm
 *.scorer
+launch.json
 
 
 # local env files
