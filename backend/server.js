@@ -27,14 +27,6 @@ app.post('/extract_audio', async (req, res) => {
   if (!fs.existsSync(audioFilePath)) {
     throw new Error(`File not found: ${audioFilePath}`);
   }
-
-  if (process.env.VUE_APP_LOCAL) {
-    console.log('Local mode, skipping transcription');
-    res.status(200).json({ message: 'Local mode, skipping transcription' });
-  } else {
-  const transcript = await transcribeAudio(audioFilePath);
-  res.status(200).json({ message: 'Audio extracted and transcribed successfully', transcript });
-  }
 });
 
 async function extractAudio(videoUrl, videoTitle) {
@@ -44,9 +36,7 @@ async function extractAudio(videoUrl, videoTitle) {
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
-
   const ytDlpWrap = new YtDlpWrap();
-
   try {
     await ytDlpWrap.execPromise([
       videoUrl,
@@ -59,7 +49,6 @@ async function extractAudio(videoUrl, videoTitle) {
     throw error;
   }
   const audioFilePath = outputFile.replace('%(title)s', 'your_audio_file_name').replace('%(ext)s', 'mp3');
-
   return audioFilePath;
 }
 
@@ -124,7 +113,7 @@ app.get('/get-transcript', (req, res) => {
 });
 
 async function getTranscript(req, res) {
-  if (process.env.VUE_APP_LOCAL) {
+  if (!!+process.env.VUE_APP_LOCAL) {
     console.log('Local mode, grabbing local JSON file');
     const jsonFilePath = path.join(__dirname, 'downloads/asrOutput.json')
     fs.readFile(jsonFilePath, 'utf8', (err, data) => {

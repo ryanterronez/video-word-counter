@@ -70,8 +70,11 @@ export default {
       try {
         const response = await axios.get('http://localhost:3000/get-transcript')
         console.log('Response from backend:', response.data)
-        this.transcript = response.data.results.transcripts[0].transcript
-        console.log(this.transcript)
+        if (response.data) {
+          this.transcript = response.data.results.transcripts[0].transcript
+        } else {
+          this.transcript = response.data.results
+        }
       } catch (error) {
         console.error('Error extracting audio:', error)
       }
