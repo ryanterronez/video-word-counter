@@ -124,7 +124,7 @@ async function getTranscript(req, res) {
 
       try {
         const jsonData = JSON.parse(data);
-        res.json(jsonData);
+        res.json(jsonData.results.transcripts[0].transcript);
       } catch (parseError) {
         console.error(`Error parsing JSON file: ${parseError.message}`);
         res.status(500).json({ error: 'Failed to parse JSON file' });
