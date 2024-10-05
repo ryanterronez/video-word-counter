@@ -4,17 +4,21 @@
     <h3>Transcript:</h3>
     <p>{{ truncatedTranscript }}</p>
     <div class="word-cloud-container">
+      <label for="cloud-word-size">Word size</label>
       <input
+        id="cloud-word-size"
         type="text"
         v-model="cloudWordSize"
-        placeholder="Word cloud word size"
+        class="number-input"
       />
+      <label for="cloud-word-count">Word count</label>
       <input
+        id="cloud-word-count"
         type="text"
         v-model="cloudWordCount"
         @input="limitInput"
         @keyup.enter="createCloud"
-        placeholder="Word cloud word count"
+        class="number-input"
       />
       <button @click="createCloud">Create Word Cloud</button>
       <div ref="wordCloudContainer" class="word-cloud"></div>
@@ -31,8 +35,8 @@ export default {
   data() {
     return {
       transcript: '',
-      cloudWordCount: '',
-      cloudWordSize: '',
+      cloudWordCount: '21',
+      cloudWordSize: '6',
     }
   },
   computed: {
@@ -97,7 +101,7 @@ export default {
       console.log(words)
 
       const layout = cloud()
-        .size([600, 400])
+        .size([900, 700])
         .words(words)
         .padding(5)
         .rotate(() => ~~(Math.random() * 2) * 90)
@@ -116,6 +120,7 @@ export default {
         .append('svg')
         .attr('width', 600)
         .attr('height', 400)
+        .attr('class', 'centered-svg')
 
       const g = svg.append('g').attr('transform', 'translate(300,200)')
 

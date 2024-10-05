@@ -8,6 +8,7 @@
         v-model="channelId"
         @input="limitInput"
         placeholder="Enter channel id"
+        class="search-input"
       />
     </div>
     <div class="form-group">
@@ -19,6 +20,7 @@
         @input="limitInput"
         @keyup.enter="searchYouTube"
         placeholder="Enter search term"
+        class="search-input"
       />
     </div>
     <button @click="searchYouTube">Search</button>

@@ -1,5 +1,6 @@
-.search-bar {
+.search-bar, .transcript-container {
   max-width: 600px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
   background-color: #f9f9f9;
@@ -7,8 +8,13 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+body {
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+}
+
 .form-group {
   margin-bottom: 15px;
+  width: 100%;
 }
 
 label {
@@ -19,11 +25,32 @@ label {
 }
 
 input[type='text'] {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.number-input {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font: inherit;
+  max-width: 150px;
+}
+
+.search-input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+  font: inherit;
+  max-width: 600px;
 }
 
 input:focus {
@@ -34,14 +61,14 @@ input:focus {
 
 button {
   padding: 10px 20px;
-  margin: 10px 0;
+  margin: 8px 0;
   border: none;
   border-radius: 25px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  font: 1em sans-serif;
+  font: inherit;
 }
 
 button:hover {
@@ -49,12 +76,12 @@ button:hover {
 }
 
 p {
-  margin-top: 10px;
+  margin-top: 2px;
   color: #666;
 }
 
 h3 {
-  margin-top: 20px;
+  margin-top: 10px;
   color: #333;
 }
 
@@ -81,6 +108,7 @@ a:hover {
   flex-direction: column;
   align-items: center;
   margin-top: 20px;
+  max-width: 900px;
 }
 
 .word-cloud-container {
@@ -88,4 +116,18 @@ a:hover {
   flex-direction: column;
   align-items: center;
   margin-top: 20px;
+  max-width: 900px;
+  width: 100%;
+}
+
+.word-cloud {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-height: 1100px;
+}
+
+.centered-svg {
+  display: block;
+  margin: auto;
 }
