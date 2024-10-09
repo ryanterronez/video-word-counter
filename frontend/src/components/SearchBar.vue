@@ -24,7 +24,13 @@
       />
     </div>
     <button @click="searchYouTube">Search</button>
-    <p>{{ remainingCharacters }} characters remaining</p>
+    <p>
+      {{
+        remainingCharacters == 1
+          ? '1 character remaining'
+          : `${remainingCharacters} characters remaining`
+      }}
+    </p>
     <div v-if="videos.length">
       <h3>Search Results:</h3>
       <ul>
