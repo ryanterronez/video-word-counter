@@ -1,3 +1,69 @@
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+
+const videoSearchTerm = ref('')
+const videos = ref([])
+const channelId = ref('UCP6GE0Xs1S15lxdN4fQakQQ')
+const showAllVideos = ref(false)
+const remainingCharacters = ref(50)
+const searchCharLimit = ref(50)
+const displayedVideos = ref([])
+
+function updateRemainingCharacters() {
+  remainingCharacters.value =
+    searchCharLimit.value - videoSearchTerm.value.length
+}
+
+function limitInput() {
+  updateRemainingCharacters()
+  if (videoSearchTerm.value.length > searchCharLimit.value) {
+    videoSearchTerm.value = videoSearchTerm.value.slice(0, searchCharLimit)
+  }
+}
+
+function updateDisplayedVideos() {
+  displayedVideos.value = showAllVideos.value
+    ? videos.value
+    : videos.value.slice(0, 5)
+}
+
+function updateShowAllVideos() {
+  showAllVideos.value = true
+  updateDisplayedVideos()
+}
+
+async function searchYouTube() {
+  // eslint-disable-next-line no-undef
+  const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY
+  const query = videoSearchTerm.value
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId.value}&maxResults=10`
+  try {
+    const response = await axios.get(url)
+    videos.value = response.data.items
+    showAllVideos.value = false
+    updateDisplayedVideos()
+  } catch (error) {
+    console.error('Error fetching YouTube videos:', error)
+  }
+}
+
+async function extractAudio(videoId, title) {
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
+  console.log('Sending request to backend:', videoUrl)
+  try {
+    const response = await axios.post('http://localhost:3000/extract_audio', {
+      video_url: videoUrl,
+      video_title: title,
+    })
+    console.log('Response from backend:', response.data)
+    console.log(response.data.message)
+  } catch (error) {
+    console.error('Error extracting audio:', error)
+  }
+}
+</script>
+
 <template>
   <div class="search-bar">
     <div class="form-group">
@@ -42,76 +108,11 @@
           >
         </li>
       </ul>
-      <button v-if="!showAllVideos" @click="showAllVideos = true">
+      <button v-if="!showAllVideos" @click="updateShowAllVideos()">
         Show All Videos
       </button>
     </div>
   </div>
 </template>
-
-<script>
-import axios from 'axios'
-
-export default {
-  data() {
-    return {
-      videoSearchTerm: '',
-      videos: [],
-      channelId: 'UCP6GE0Xs1S15lxdN4fQakQQ',
-      searchCharLimit: 50,
-      showAllVideos: false,
-    }
-  },
-  computed: {
-    remainingCharacters() {
-      return this.searchCharLimit - this.videoSearchTerm.length
-    },
-    displayedVideos() {
-      return this.showAllVideos ? this.videos : this.videos.slice(0, 5)
-    },
-  },
-  methods: {
-    limitInput() {
-      if (this.videoSearchTerm.length > this.searchCharLimit) {
-        this.videoSearchTerm = this.videoSearchTerm.slice(
-          0,
-          this.searchCharLimit
-        )
-      }
-    },
-
-    async searchYouTube() {
-      // eslint-disable-next-line no-undef
-      const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY
-      const query = this.videoSearchTerm
-      const channelId = this.channelId
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&key=${apiKey}&channelId=${channelId}&maxResults=10`
-
-      try {
-        const response = await axios.get(url)
-        this.videos = response.data.items
-      } catch (error) {
-        console.error('Error fetching YouTube videos:', error)
-      }
-    },
-
-    async extractAudio(videoId, title) {
-      const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
-      console.log('Sending request to backend:', videoUrl)
-      try {
-        const response = await axios.post(
-          'http://localhost:3000/extract_audio',
-          { video_url: videoUrl, video_title: title }
-        )
-        console.log('Response from backend:', response.data)
-        this.transcript = response.data.transcript
-        console.log(response.data.message)
-      } catch (error) {
-        console.error('Error extracting audio:', error)
-      }
-    },
-  },
-}
-</script>
 
 <style scoped></style>
