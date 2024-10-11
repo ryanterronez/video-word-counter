@@ -1,10 +1,12 @@
 <script setup>
 import axios from 'axios'
-import { ref } from 'vue'
+import { ref, getCurrentInstance } from 'vue'
 
 const transcript = ref('')
 const maxLength = ref('1000')
 const truncatedTranscript = ref('')
+
+const { emit } = getCurrentInstance()
 
 function createTruncatedTranscript() {
   if (transcript.value.length > maxLength.value) {
@@ -22,6 +24,7 @@ async function getTranscript() {
     console.error('Error extracting audio:', error)
   }
   createTruncatedTranscript()
+  emit('transcript-updated', transcript.value)
 }
 </script>
 

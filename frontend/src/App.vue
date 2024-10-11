@@ -2,8 +2,8 @@
 <template>
   <div id="app">
     <SearchBar />
-    <TranscriptContainer />
-    <WordCloudContainer />
+    <TranscriptContainer @transcript-updated="handleTranscriptUpdated" />
+    <WordCloudContainer :transcript="currentTranscript" />
   </div>
 </template>
 
@@ -13,10 +13,20 @@ import TranscriptContainer from './components/TranscriptContainer.vue'
 import WordCloudContainer from './components/WordCloudContainer.vue'
 
 export default {
+  data() {
+    return {
+      currentTranscript: '',
+    }
+  },
   components: {
     SearchBar,
     TranscriptContainer,
     WordCloudContainer,
+  },
+  methods: {
+    handleTranscriptUpdated(transcript) {
+      this.currentTranscript = transcript
+    },
   },
 }
 </script>
