@@ -108,7 +108,7 @@ async function transcribeAudio(audioFilePath) {
   });
 }
 
-app.get('/get-transcript', (req, res) => {
+app.get('/get_transcript', (req, res) => {
   getTranscript(req, res);
 });
 

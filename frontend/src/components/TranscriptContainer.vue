@@ -18,7 +18,7 @@ function createTruncatedTranscript() {
 async function getTranscript() {
   console.log('Getting transcript...')
   try {
-    const response = await axios.get('http://localhost:3000/get-transcript')
+    const response = await axios.get('http://localhost:3000/get_transcript')
     transcript.value = response.data
   } catch (error) {
     console.error('Error extracting audio:', error)
