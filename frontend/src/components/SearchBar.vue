@@ -6,31 +6,24 @@ const videoSearchTerm = ref('')
 const videos = ref([])
 const channelId = ref('UCP6GE0Xs1S15lxdN4fQakQQ')
 const showAllVideos = ref(false)
-const searchCharLimit = ref(50)
-const displayedVideos = ref([])
+const searchCharLimit = 50
 
 const remainingCharacters = computed(() => {
-  return searchCharLimit.value - videoSearchTerm.value.length
+  return searchCharLimit - videoSearchTerm.value.length
 })
 
 function limitInput() {
-  if (videoSearchTerm.value.length > searchCharLimit.value) {
-    videoSearchTerm.value = videoSearchTerm.value.slice(
-      0,
-      searchCharLimit.value
-    )
+  if (videoSearchTerm.value.length > searchCharLimit) {
+    videoSearchTerm.value = videoSearchTerm.value.slice(0, searchCharLimit)
   }
 }
 
-function updateDisplayedVideos() {
-  displayedVideos.value = showAllVideos.value
-    ? videos.value
-    : videos.value.slice(0, 5)
-}
+const displayedVideos = computed(() => {
+  return showAllVideos.value ? videos.value : videos.value.slice(0, 5)
+})
 
 function updateShowAllVideos() {
   showAllVideos.value = true
-  updateDisplayedVideos()
 }
 
 async function searchYouTube() {
@@ -42,7 +35,6 @@ async function searchYouTube() {
     const response = await axios.get(url)
     videos.value = response.data.items
     showAllVideos.value = false
-    updateDisplayedVideos()
   } catch (error) {
     console.error('Error fetching YouTube videos:', error)
   }
