@@ -1,24 +1,24 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 
 const videoSearchTerm = ref('')
 const videos = ref([])
 const channelId = ref('UCP6GE0Xs1S15lxdN4fQakQQ')
 const showAllVideos = ref(false)
-const remainingCharacters = ref(50)
 const searchCharLimit = ref(50)
 const displayedVideos = ref([])
 
-function updateRemainingCharacters() {
-  remainingCharacters.value =
-    searchCharLimit.value - videoSearchTerm.value.length
-}
+const remainingCharacters = computed(() => {
+  return searchCharLimit.value - videoSearchTerm.value.length
+})
 
 function limitInput() {
-  updateRemainingCharacters()
   if (videoSearchTerm.value.length > searchCharLimit.value) {
-    videoSearchTerm.value = videoSearchTerm.value.slice(0, searchCharLimit)
+    videoSearchTerm.value = videoSearchTerm.value.slice(
+      0,
+      searchCharLimit.value
+    )
   }
 }
 
