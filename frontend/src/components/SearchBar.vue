@@ -22,10 +22,6 @@ const displayedVideos = computed(() => {
   return showAllVideos.value ? videos.value : videos.value.slice(0, 5)
 })
 
-function updateShowAllVideos() {
-  showAllVideos.value = true
-}
-
 async function searchYouTube() {
   // eslint-disable-next-line no-undef
   const apiKey = process.env.VUE_APP_YOUTUBE_API_KEY
@@ -100,7 +96,7 @@ async function extractAudio(videoId, title) {
           >
         </li>
       </ul>
-      <button v-if="!showAllVideos" @click="updateShowAllVideos()">
+      <button v-if="!showAllVideos" @click="showAllVideos = true">
         Show All Videos
       </button>
     </div>
